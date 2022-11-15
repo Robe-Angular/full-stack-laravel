@@ -1,17 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\User;
+
 
 class UserController extends Controller {
 
     public function pruebas(Request $request) {
         return "Acción de pruebas User-Controller";
     }
-
+    /*
     public function register(Request $request) {
 
         //Recoger los datos del usuario con post
@@ -70,6 +69,8 @@ class UserController extends Controller {
         }
         return response()->json($data, $data['code']);
     }
+     
+     */
 
     public function login(Request $request) {
 
@@ -95,19 +96,28 @@ class UserController extends Controller {
             );
         } else {
             //Cifrar Password
+            /*
             $pwd = hash('sha256', $params->password);
             //Devolver token o datos
             $signup = $jwtAuth->signup($params->email, $pwd);
+             * 
+             */
+            $pwd = $params->password;
+            $adminBodyEmail = $params->email;
+            $signup = $jwtAuth->signup($adminBodyEmail,$pwd);
             
             if (isset($params->getToken)) {
                 $signup = $jwtAuth->signup($params->email, $pwd, true);
             }
+             
         }
 
 
         return response()->json($signup, 200);
     }
 
+
+    /*
     public function update(Request $request) {
         //Comprobar si está identificado
         $token = $request->header('Authorization');
@@ -134,6 +144,7 @@ class UserController extends Controller {
             unset($params_array['password']);
             unset($params_array['created_at']);
             unset($params_array['remember_token']);
+            unset($params_array['image']);
 
             //Actualizar usuario en la BDD
             $user_update = User::where('id', $user->sub)->update($params_array);
@@ -222,5 +233,7 @@ class UserController extends Controller {
         
         return response()->json($data, $data['code']);
     }
-
+*      */
 }
+
+     

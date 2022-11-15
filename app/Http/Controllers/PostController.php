@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Post;
+use App\Image;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Helpers\JwtAuth;
@@ -30,14 +31,23 @@ class PostController extends Controller {
     }
 
     public function show($id) {
-        $post = Post::find($id)->load('category')
-                    ->load('user');
-
+        $post = Post::find($id)->load('category');
+        $image_id = $post->image;
+        if($image_id){
+            $image_description = Image::find($image_id)->description;
+        }else{
+            $image_description = 'no_main_yet';
+        }
+        
+        
+                
         if (is_object($post)) {
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'post' => $post
+                'post' => $post,
+                'image_description' => $image_description,
+                'image_id' => $image_id
             ];
         } else {
             $data = [
@@ -55,16 +65,18 @@ class PostController extends Controller {
         $json = $request->input('json', null);
         $params = json_decode($json);
         $params_array = json_decode($json, true);
+        $user = $this->getIdentity($request);
+        
+        $is_admin = $user->sub == 1;
 
-        if (!empty($params_array)) {
+        if (!empty($params_array) && $is_admin) {
             //Conseguir usuario identificado
-            $user = $this->getIdentity($request);
+            
             //Validar los datos
             $validate = \Validator::make($params_array, [
                         'title' => 'required',
                         'content' => 'required',
-                        'category_id' => 'required',
-                        'image' => 'required'
+                        'category_id' => 'required'
             ]);
             if ($validate->fails()) {
                 $data = [
@@ -75,12 +87,11 @@ class PostController extends Controller {
             } else {
                 //Guardar el artículo
                 $post = new Post();
-                $post->user_id = $user->sub;
                 $post->category_id = $params->category_id;
                 $post->title = $params->title;
                 $post->content = $params->content;
-                $post->image = $params->image;
                 $post->save();
+                
                 $data = [
                     'code' => 200,
                     'status' => 'success',
@@ -101,7 +112,7 @@ class PostController extends Controller {
     public function update($id, Request $request) {
         //Conseguir usuario identificado
         $user = $this->getIdentity($request);
-        
+        $is_admin = $user->sub == 1;
         //Recoger los datos por Post
         $json = $request->input('json', null);
         $params_array = json_decode($json, true);
@@ -110,7 +121,7 @@ class PostController extends Controller {
             'status' => 'error',
             'message' => 'Datos enviados incorrectamente'
         ];
-        if (!empty($params_array)) {
+        if (!empty($params_array) && $is_admin) {
             //Validar los datos
             $validate = \Validator::make($params_array, [
                         'title' => 'required',
@@ -130,9 +141,7 @@ class PostController extends Controller {
 
             //Actualizar el registro en concreto
             
-            $post_update = Post::where('id', $id)
-                    ->where('user_id', $user->sub)
-                    ->update($params_array);
+            $post_update = Post::find($id)->update($params_array);
             $post = Post::find($id);
 
             if($post_update && !empty($post)){
@@ -157,12 +166,20 @@ class PostController extends Controller {
     public function destroy($id, Request $request){
         //Conseguir usuario identificado
         $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
         //Conseguir el registro
-        $post = Post::where('id', $id)
-                ->where('user_id', $user->sub)
-                ->first();
+        $post = Post::find($id);
         
-        if(!empty($post)){
+        if(!empty($post) && $is_admin){
+            
+            $deleted_images = Images::where('post_id', $id);
+            foreach($deleted_images as $image){
+                $file_name = $image->image_name;
+                \Storage::disk('images')->delete($file_name);
+            }
+            
+            $deleted_images->delete();
+            
             //Borrarlo
             $post->delete();
 
@@ -191,8 +208,21 @@ class PostController extends Controller {
     }
     
     public function upload(Request $request){
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        if(!$is_admin){
+            $data = [
+              'code'  => 400,
+              'status'  => 'error',
+              'message'  => 'Error al subir la imagen'              
+                
+            ];
+            return response()->json($data,$data['code']);
+        }
+        
         //Recoger la imagen de la petición
-        $image = $request->file('file0');
+        $image = $request->file('file0');        
+        
         
         //Validar la imagen
         $validate = \Validator::make($request->all(),[
@@ -203,13 +233,22 @@ class PostController extends Controller {
             $data = [
               'code'  => 400,
               'status'  => 'error',
-              'message'  => 'Error al subir la imagen'
+              'message'  => 'Error al subir la imagen'              
+                
             ];
         }else{
             $image_name = time().$image->getClientOriginalName();
             
             \Storage::disk('images')->put($image_name, \File::get($image));
+            /*
+            $new_image = new Image();
+            $new_image->post_id = $post_id;
             
+            $new_image->name = $image_name;
+            $new_image->save();
+             
+             * 
+             */
             $data = [
                 'code' =>200,
                 'status' => 'success',
@@ -220,25 +259,9 @@ class PostController extends Controller {
         return response()->json($data, $data['code']);
     }
     
-    public function getImage($filename){
-        //Comprobar si existe el fichero
-        $isset = \Storage::disk('images')->exists($filename);
-        
-        if($isset){
-        //Conseguir la imagen
-        $file = \Storage::disk('images')->get($filename);
-        //Devolver la imagen
-        return new Response($file, 200);
-        }else{
-            $data = [
-                'code'  => 404,
-                'status' => 'error',
-                'message' => 'la imagen no existe'
-            ];
-        }
-        //Mostrar error
-        return response()->json($data,$data['code']);
-    }
+    
+    
+    
     
     public function getPostsByCategory($id) {
         $posts = Post::where('category_id', $id)->get();
