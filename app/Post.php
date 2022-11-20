@@ -26,4 +26,11 @@ class Post extends Model
         return $this->hasMany('App\Image');
         
     }
+    public function image(){
+        return $this->belongsTo('App\Image', 'image');
+    }
 }
+
+/*
+ * 
+ */

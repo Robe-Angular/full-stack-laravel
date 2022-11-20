@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Image;
 use Illuminate\Http\Request;
 use App\Helpers\JwtAuth;
+use Illuminate\Http\Response;
 use App\Post;
 
 
@@ -132,8 +133,7 @@ class ImageController extends Controller
             unset($params_array['image_name']);
             unset($params_array['created_at']);
             unset($params_array['updated_at']);
-            $image_update = Post::where('id', $id)
-                    ->where('user_id', $user->sub)
+            $image_update = Image::where('id', $id)
                     ->update($params_array);
             $image = Image::find($id);
 
@@ -161,7 +161,7 @@ class ImageController extends Controller
      * @param  \App\Image  $image
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Image $image)
+    public function destroy($image,Request $request)
     {
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
@@ -170,13 +170,18 @@ class ImageController extends Controller
             'status' => 'error',
             'message' => 'server Error'
         ];
-        if(is_admin){
+        if($is_admin){
+            $posts = Post::where('image',$image);
+            
+            $posts_updated = $posts->update(['image'=>NULL]);
+            
             $image_to_delete = Image::find($image);
-            $file_name = $image_to_delete->name;
-            $isset = \Storage::disk('images')->exists(filename);
+            $file_name = $image_to_delete->image_name;
+            $isset = \Storage::disk('images')->exists($file_name);            
+            $image_to_delete->delete();
             if($isset){
                 \Storage::disk('images')->delete($file_name);
-                $image_to_delete->delete();
+                
                 $data = [
                     'code'  => 200,
                     'status' => 'success',
@@ -186,6 +191,7 @@ class ImageController extends Controller
             
             
         }
+        return response()->json($data, $data['code']);
         
     }
     
@@ -204,7 +210,7 @@ class ImageController extends Controller
         
         foreach($images as $image){
             
-            $filename = $image->image_name();
+            $filename = $image->image_name;
             
         }
         
@@ -220,7 +226,8 @@ class ImageController extends Controller
             $data = [
                 'code'  => 404,
                 'status' => 'error',
-                'message' => 'la imagen no existe'
+                'message' => 'la imagen no existe',
+                'filename' => $filename
             ];
         }
         //Mostrar error

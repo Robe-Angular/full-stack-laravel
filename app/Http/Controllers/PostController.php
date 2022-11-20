@@ -21,7 +21,7 @@ class PostController extends Controller {
     }
 
     public function index() {
-        $posts = Post::all()->load('category');
+        $posts = Post::all()->load('category')->load('image');
 
         return response()->json([
                     'code' => 200,
@@ -264,7 +264,18 @@ class PostController extends Controller {
     
     
     public function getPostsByCategory($id) {
-        $posts = Post::where('category_id', $id)->get();
+        $posts = Post::where('category_id', $id)->with('image')->get();
+        //$posts = Post::all()->load('image');
+        /*$posts = Post::with(['image' => function ($query) use ($id) {
+            $query->where('category_id','=',$id);
+        }])->get();*/
+        
+        /*
+        $users = App\User::with(['posts' => function ($query) {
+            $query->where('title', 'like', '%first%');
+        }])->get();
+         */
+        
         
         return response()->json([
             'status' => 'success',
@@ -273,7 +284,7 @@ class PostController extends Controller {
     }
     
     public function getPostsByUser($id) {
-        $posts = Post::where('user_id', $id)->get();
+        $posts = Post::where('user_id', $id)->load('image')->get();
         
         return response()->json([
             'status' => 'success',
