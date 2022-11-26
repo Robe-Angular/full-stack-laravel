@@ -21,7 +21,7 @@ class PostController extends Controller {
     }
 
     public function index() {
-        $posts = Post::all()->load('category')->load('image');
+        $posts = Post::where('published',true)->with('category')->with('image')->get();
 
         return response()->json([
                     'code' => 200,
@@ -75,7 +75,6 @@ class PostController extends Controller {
             //Validar los datos
             $validate = \Validator::make($params_array, [
                         'title' => 'required',
-                        'content' => 'required',
                         'category_id' => 'required'
             ]);
             if ($validate->fails()) {
@@ -89,13 +88,13 @@ class PostController extends Controller {
                 $post = new Post();
                 $post->category_id = $params->category_id;
                 $post->title = $params->title;
-                $post->content = $params->content;
+                $post->published = false;
                 $post->save();
                 
                 $data = [
                     'code' => 200,
                     'status' => 'success',
-                    'message' => $post
+                    $post => $post
                 ];
             }
         } else {
@@ -264,7 +263,7 @@ class PostController extends Controller {
     
     
     public function getPostsByCategory($id) {
-        $posts = Post::where('category_id', $id)->with('image')->get();
+        $posts = Post::where('category_id', $id)->where('published',true)->with('image')->get();
         //$posts = Post::all()->load('image');
         /*$posts = Post::with(['image' => function ($query) use ($id) {
             $query->where('category_id','=',$id);
@@ -284,11 +283,56 @@ class PostController extends Controller {
     }
     
     public function getPostsByUser($id) {
-        $posts = Post::where('user_id', $id)->load('image')->get();
+        $posts = Post::where('user_id', $id)->where('published',true) ->load('image')->get();
         
         return response()->json([
             'status' => 'success',
             'posts' => $posts
         ], 200);
+    }
+    
+    public function getPostsInAdmin(Request $request) {
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        $data = [
+            'code'=>400,
+            'status' => 'error',
+            'message' => 'server error'
+        ];
+        if(is_admin){
+            $posts = Post::all();
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'posts' => $posts
+
+            ];  
+        }
+        
+        return response()->json($data,$data['code']);
+        
+        
+    }
+    
+    public function setPublished($id,$value, Request $request){
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        $data = [
+            'code'=>400,
+            'status' => 'error',
+            'message' => 'server error'
+        ];
+        if($is_admin){
+            $post = Post::find($id);
+            $post_update = $post->update(['published'=>$value]);
+            $data = [
+                'code'=>200,
+                'status' => 'success',
+                'post_update' => $post_update
+            ];
+        }
+        
+        return response()->json($data,$data['code']);
+            
     }
 }
