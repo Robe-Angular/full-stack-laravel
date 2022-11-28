@@ -31,17 +31,15 @@ class PostController extends Controller {
     }
 
     public function show($id) {
-        $post = Post::find($id)->load('category');
-        $image_id = $post->image;
-        if($image_id){
-            $image_description = Image::find($image_id)->description;
-        }else{
-            $image_description = 'no_main_yet';
-        }
-        
-        
-                
+        $post = Post::find($id);
         if (is_object($post)) {
+            $post_with_category = $post->load('category');
+            $image_id = $post->image;
+            if($image_id){
+                $image_description = Image::find($image_id)->description;
+            }else{
+                $image_description = 'no_main_yet';
+            }
             $data = [
                 'code' => 200,
                 'status' => 'success',
@@ -94,7 +92,7 @@ class PostController extends Controller {
                 $data = [
                     'code' => 200,
                     'status' => 'success',
-                    $post => $post
+                    'post' => $post
                 ];
             }
         } else {
@@ -299,7 +297,7 @@ class PostController extends Controller {
             'status' => 'error',
             'message' => 'server error'
         ];
-        if(is_admin){
+        if($is_admin){
             $posts = Post::all();
             $data = [
                 'code' => 200,
@@ -323,12 +321,16 @@ class PostController extends Controller {
             'message' => 'server error'
         ];
         if($is_admin){
+            $set_value = $value == 'true' ? true : false;
             $post = Post::find($id);
-            $post_update = $post->update(['published'=>$value]);
+            $post_update = $post->update(['published'=>$set_value]);
             $data = [
                 'code'=>200,
                 'status' => 'success',
-                'post_update' => $post_update
+                'post_update' => $post_update,
+                'value' => $value,
+                'set_value' => $set_value,
+                'post' => $post
             ];
         }
         

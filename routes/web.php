@@ -69,7 +69,8 @@ Route::get('/testOrm', 'PruebasController@testOrm');
     Route::post('/api/post/upload','PostController@upload');
     Route::get('/api/post/category/{id}', 'PostController@getPostsByCategory');
     Route::get('/api/post/user/{id}', 'PostController@getPostsByUser');
-    Route::get('/api/post/publish/{id}/{value}');
+    Route::get('/api/list-post-admin', 'PostController@getPostsInAdmin');
+    Route::get('/api/post/publish/{id}/{value}', 'PostController@setPublished');
     
     //imageController
     Route::resource('/api/image', 'ImageController');

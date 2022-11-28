@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     protected $table = 'posts';
-    public $fillable = ['title','content','image','category_id'];
+    public $fillable = ['title','content','image','category_id','published'];
     //Relación de uno a muchos inversa (muchos a uno)
     /*
     public function user(){
