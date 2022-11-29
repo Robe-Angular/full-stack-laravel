@@ -12,6 +12,7 @@
 */
 //Cargando clases
 use App\Http\Middleware\ApiAuthMiddleware;
+use App\Http\Middleware\Cors;
 
 //Rutas de prueba
 /*
@@ -51,7 +52,7 @@ Route::get('/testOrm', 'PruebasController@testOrm');
     Route::get('/categoria/pruebas','CategoryController@pruebas');
     Route::get('/entrada/pruebas','PostController@pruebas');
   */  
-
+    Route::group(['middleware' => ['cors']], function () {
     //Rutas del controlador de usuario
     //Route::post('/api/register', 'UserController@register');
     Route::post('/api/login', 'UserController@login');
@@ -78,4 +79,4 @@ Route::get('/testOrm', 'PruebasController@testOrm');
     Route::post('/api/image/save', 'ImageController@saveImage');
     
     Route::get('api/images-by-post/{post_id}','ImageController@getImagesByPost');
-    
+    });
