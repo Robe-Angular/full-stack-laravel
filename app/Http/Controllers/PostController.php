@@ -110,14 +110,18 @@ class PostController extends Controller {
         //Conseguir usuario identificado
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
+        
         //Recoger los datos por Post
         $json = $request->input('json', null);
         $params_array = json_decode($json, true);
+        
         $data = [
             'code' => 400,
             'status' => 'error',
-            'message' => 'Datos enviados incorrectamente'
+            'message' => 'Datos enviados incorrectamente',
+            'params'=> $params_array
         ];
+        
         if (!empty($params_array) && $is_admin) {
             //Validar los datos
             $validate = \Validator::make($params_array, [

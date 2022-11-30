@@ -220,8 +220,11 @@ class ImageController extends Controller
         if($isset){
         //Conseguir la imagen
         $file = \Storage::disk('images')->get($filename);
+        $type = \Storage::disk('images')->mimeType($filename);
         //Devolver la imagen
-        return new Response($file, 200);
+
+        return \Illuminate\Support\Facades\Response::make($file, 200)
+                ->header('Content-Type',$type);
         }else{
             $data = [
                 'code'  => 404,
