@@ -30,9 +30,13 @@ class PostController extends Controller {
                         ], 200);
     }
 
-    public function show($id) {
+    public function show($id,Request $request) {
         $post = Post::find($id);
-        if (is_object($post)) {
+        $post_is_published = $post->published == true;
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        
+        if (is_object($post) && ($post_is_published || $is_admin)) {
             $post_with_category = $post->load('category');
             $image_id = $post->image;
             if($image_id){
@@ -86,6 +90,7 @@ class PostController extends Controller {
                 $post = new Post();
                 $post->category_id = $params->category_id;
                 $post->title = $params->title;
+                $post->content = "";
                 $post->published = false;
                 $post->save();
                 
@@ -170,16 +175,25 @@ class PostController extends Controller {
         $is_admin = $user->sub == 1;
         //Conseguir el registro
         $post = Post::find($id);
-        
+        $concat_image_names = "";
         if(!empty($post) && $is_admin){
             
-            $deleted_images = Images::where('post_id', $id);
+            $deleted_images = Image::where('post_id', $id)->get();
+            
+            $images_to_delete = Image::where('post_id', $id);
+            
             foreach($deleted_images as $image){
+                
                 $file_name = $image->image_name;
-                \Storage::disk('images')->delete($file_name);
+                $concat_image_names .= $file_name;
+                $isset = \Storage::disk('images')->exists($file_name);
+                if($isset){
+                    \Storage::disk('images')->delete($file_name);
+                }
+                
             }
             
-            $deleted_images->delete();
+            $images_to_delete->delete();
             
             //Borrarlo
             $post->delete();
@@ -188,7 +202,8 @@ class PostController extends Controller {
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'post' => $post
+                'post' => $post,
+                'concat' => $concat_image_names
             ];
         } else{
             $data =[
@@ -302,7 +317,7 @@ class PostController extends Controller {
             'message' => 'server error'
         ];
         if($is_admin){
-            $posts = Post::all();
+            $posts = Post::all()->load('image');
             $data = [
                 'code' => 200,
                 'status' => 'success',

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Post;
+use App\Image;
 use App\Helpers\JwtAuth;
 use App\Category;
 
@@ -145,7 +147,8 @@ class CategoryController extends Controller {
         $user = $jwtAuth->checkToken($token, true);
         return $user;
     }
-    public function destroy($id,$request){
+    
+    public function destroy($id,Request $request){
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
         $data = [
@@ -156,11 +159,34 @@ class CategoryController extends Controller {
         if($is_admin){
             $category = new Category();
             $category = Category::find($id);
+            $posts_to_delete = Post::where('category_id',$id)->get();
+            $concat_img_file = '';
+            
+            foreach($posts_to_delete as $post){
+                
+                $deleted_images = Image::where('post_id', $post->id)->get();
+                $images_to_delete = Image::where('post_id', $post->id);
+                
+                foreach($deleted_images as $image){
+                    $file_name = $image->image_name;
+                    $concat_img_file .= $file_name;
+                    $isset = \Storage::disk('images')->exists($file_name);
+                    if($isset){
+                        \Storage::disk('images')->delete($file_name);
+                    }
+                }
+
+                $images_to_delete->delete();
+                $post->delete();
+            }
+            
+            
             $category->delete();
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'category' => $category
+                'category' => $category,
+                'concat' => $concat_img_file
             ];
             
         }
