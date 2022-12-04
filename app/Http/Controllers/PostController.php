@@ -34,7 +34,11 @@ class PostController extends Controller {
         $post = Post::find($id);
         $post_is_published = $post->published == true;
         $user = $this->getIdentity($request);
-        $is_admin = $user->sub == 1;
+        $is_admin = false;
+        if(is_object($user)){
+            $is_admin = $user->sub == 1;
+        }
+        
         
         if (is_object($post) && ($post_is_published || $is_admin)) {
             $post_with_category = $post->load('category');
