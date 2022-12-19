@@ -12,4 +12,8 @@ class Category extends Model
     public function posts(){
         return $this->hasMany('App\Post');
     }
+    
+    public function categories_language(){
+        return $this->hasMany('App\Categories_Language');
+    }
 }

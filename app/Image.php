@@ -13,5 +13,9 @@ class Image extends Model
         return $this->belongsTo('App\Post');
     }
     
+    public function images_language(){
+        return $this->hasMany('App\Images_Language');
+    }
+    
     
 }

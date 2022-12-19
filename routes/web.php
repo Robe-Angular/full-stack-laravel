@@ -78,6 +78,9 @@ Route::get('/testOrm', 'PruebasController@testOrm');
         Route::resource('/api/image', 'ImageController');
         Route::get('/api/post/image/{file_description}', 'ImageController@getImage');
         Route::post('/api/image/save', 'ImageController@saveImage');
-
         Route::get('api/images-by-post/{post_id}','ImageController@getImagesByPost');
+        
+        Route::get('api/getCategoriesLanguageFromOne/{category_id}','CategoriesLanguageController@getCategoriesLanguageFromOne');
+        Route::put('api/categoryLanguage/{category_id}','CategoriesLanguageController@saveCategoryLanguage');
+        Route::delete('api/categoryLanguage/{category_language_id}','CategoriesLanguageController@deleteCategoryLanguage');
     //});

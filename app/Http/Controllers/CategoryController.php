@@ -6,19 +6,25 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Post;
 use App\Image;
+use App\Category_Language;
 use App\Helpers\JwtAuth;
 use App\Category;
 
-class CategoryController extends Controller {
 
+class CategoryController extends Controller {
+    
+    
     public function __construct() {
         $this->middleware('api.auth', ['except' => ['index', 'show']]);
+    
         
     }
+    
+    
 
     public function index() {
         $categories = Category::all();
-
+        
         return response()->json([
                     'code' => 200,
                     'status' => 'success',
@@ -28,7 +34,8 @@ class CategoryController extends Controller {
 
     public function show($id) {
         $category = Category::find($id);
-
+        
+        
         if (is_object($category)) {
             $data = [
                 'code' => 200,
@@ -75,13 +82,21 @@ class CategoryController extends Controller {
                 ];
             } else {
                 $category = new Category();
+                
+                
+                        
                 $category->name = $params_array['name'];
+                
+                
                 if($is_admin){
                     $category->save();
+                    
+                    
+                    
                     $data = [
                         'code' => 200,
                         'status' => 'success',
-                        'message' => $category
+                        'category' => $category                    
                     ];
                 }
                 
