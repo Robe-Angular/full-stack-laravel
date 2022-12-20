@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Post;
 use App\Image;
+use App\Posts_Language;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Helpers\JwtAuth;
@@ -97,6 +98,16 @@ class PostController extends Controller {
                 $post->content = "";
                 $post->published = false;
                 $post->save();
+                
+                $config_langs = config('static_arrays.languages');
+                foreach ($config_langs as $lang) {
+                    $post_language = new Posts_Language();
+                    $post_language->post_id = $post->id;
+                    $post_language->language_symbol = $lang;
+                    $post_language->title_language = "";
+                    $post_language->content_language = "";
+                }
+                
                 
                 $data = [
                     'code' => 200,
@@ -321,7 +332,7 @@ class PostController extends Controller {
             'message' => 'server error'
         ];
         if($is_admin){
-            $posts = Post::all()->load('image');
+            $posts = Post::all()->load('image')->load('posts_language');
             $data = [
                 'code' => 200,
                 'status' => 'success',

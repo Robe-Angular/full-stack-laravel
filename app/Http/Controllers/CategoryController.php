@@ -82,11 +82,8 @@ class CategoryController extends Controller {
                 ];
             } else {
                 $category = new Category();
-                
-                
                         
-                $category->name = $params_array['name'];
-                
+                $category->name = $params_array['name'];                
                 
                 if($is_admin){
                     $category->save();
