@@ -68,7 +68,9 @@ Route::get('/testOrm', 'PruebasController@testOrm');
 
         //Rutas del controlador entradas
         Route::resource('/api/post', 'PostController');
+        Route::put('/api/post/update/{post_language_id}/{post_id}','PostController@updateLanguage');
         Route::post('/api/post/upload','PostController@upload');
+        
         Route::get('/api/post/category/{id}', 'PostController@getPostsByCategory');
         Route::get('/api/post/user/{id}', 'PostController@getPostsByUser');
         Route::get('/api/list-post-admin', 'PostController@getPostsInAdmin');

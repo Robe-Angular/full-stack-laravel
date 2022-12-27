@@ -69,7 +69,7 @@ class CategoryController extends Controller {
         if (!empty($params_array)) {
             //Validar los datos
             $validate = \Validator::make($params_array, [
-                        'name' => 'required'
+                        'description' => 'required'
             ]);
 
             //Guardar la categoría
@@ -83,7 +83,7 @@ class CategoryController extends Controller {
             } else {
                 $category = new Category();
                         
-                $category->name = $params_array['name'];                
+                $category->description = $params_array['description'];
                 
                 if($is_admin){
                     $category->save();

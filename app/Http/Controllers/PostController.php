@@ -22,7 +22,7 @@ class PostController extends Controller {
     }
 
     public function index() {
-        $posts = Post::where('published',true)->with('category')->with('image')->get();
+        $posts = Posts_Language::where('published',true)->with('post')->get();
 
         return response()->json([
                     'code' => 200,
@@ -33,7 +33,6 @@ class PostController extends Controller {
 
     public function show($id,Request $request) {
         $post = Post::find($id);
-        $post_is_published = $post->published == true;
         $user = $this->getIdentity($request);
         $is_admin = false;
         if(is_object($user)){
@@ -41,7 +40,7 @@ class PostController extends Controller {
         }
         
         
-        if (is_object($post) && ($post_is_published || $is_admin)) {
+        if (is_object($post) && ($is_admin)) {
             $post_with_category = $post->load('category');
             $image_id = $post->image;
             if($image_id){
@@ -81,7 +80,6 @@ class PostController extends Controller {
             
             //Validar los datos
             $validate = \Validator::make($params_array, [
-                        'title' => 'required',
                         'category_id' => 'required'
             ]);
             if ($validate->fails()) {
@@ -93,10 +91,7 @@ class PostController extends Controller {
             } else {
                 //Guardar el artículo
                 $post = new Post();
-                $post->category_id = $params->category_id;
-                $post->title = $params->title;
-                $post->content = "";
-                $post->published = false;
+                $post->category_id = $params->category_id;                
                 $post->save();
                 
                 $config_langs = config('static_arrays.languages');
@@ -106,6 +101,8 @@ class PostController extends Controller {
                     $post_language->language_symbol = $lang;
                     $post_language->title_language = "";
                     $post_language->content_language = "";
+                    $post_language->published = false;
+                    $post_language->save();
                 }
                 
                 
@@ -126,7 +123,7 @@ class PostController extends Controller {
         return response()->json($data, $data['code']);
     }
 
-    public function update($id, Request $request) {
+    public function updateLanguage($post_language_id,$post_id, Request $request) {
         //Conseguir usuario identificado
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
@@ -159,18 +156,26 @@ class PostController extends Controller {
             unset($params_array['created_at']);
             unset($params_array['user']);
             unset($params_array['category']);
-
+            
+            $post_language_update_array = array(
+                'title_language' => $params_array['title'],
+                'content_language' => $params_array['content']
+            );
+            
+            $post_category_update_array = array(
+                'category_id' => $params_array['category_id']
+            );
             //Actualizar el registro en concreto
             
-            $post_update = Post::find($id)->update($params_array);
-            $post = Post::find($id);
+            $post_update = Post::find($post_id)->update($post_category_update_array);
+            $post_language_update = Posts_Language::find($post_language_id)->update($post_language_update_array);
 
             if($post_update && !empty($post)){
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'post' => $post,
-                'changes' => $params_array
+                'post' => $post_update,
+                'post_language' => $post_language_update
             ];
             }else{
             $data = [
