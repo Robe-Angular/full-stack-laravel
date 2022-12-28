@@ -79,4 +79,15 @@ class CategoriesLanguageController extends Controller
         $user = $jwtAuth->checkToken($token, true);
         return $user;
     }
+    
+    public function getCategoriesForLanguage($lang){
+        $categoriesLanguage = Categories_Language::where('language_symbol',$lang)->with('category')->get();
+        $data = [
+            'code'=>200,
+            'status' => 'success',
+            'categories' => $categoriesLanguage
+        ];
+          
+        return response()->json($data,$data['code']);
+    }
 }
