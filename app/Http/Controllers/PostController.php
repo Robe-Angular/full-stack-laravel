@@ -299,8 +299,14 @@ class PostController extends Controller {
     
     
     
-    public function getPostsByCategory($id) {
-        $posts = Post::where('category_id', $id)->where('published',true)->with('image')->get();
+    public function getPostsByCategory($id,$language) {
+        
+        $posts = Post::where('category_id', $id)->with(
+            array('posts_language' => function($query) use ($language){ 
+                $query->where('posts_language.language_symbol', $language);
+            }))
+        
+            ->get();
         //$posts = Post::all()->load('image');
         /*$posts = Post::with(['image' => function ($query) use ($id) {
             $query->where('category_id','=',$id);

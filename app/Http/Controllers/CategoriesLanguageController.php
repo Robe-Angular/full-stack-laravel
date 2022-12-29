@@ -81,7 +81,7 @@ class CategoriesLanguageController extends Controller
     }
     
     public function getCategoriesForLanguage($lang){
-        $categoriesLanguage = Categories_Language::where('language_symbol',$lang)->with('category')->get();
+        $categoriesLanguage = Categories_Language::where('language_symbol',$lang)->get();
         $data = [
             'code'=>200,
             'status' => 'success',
