@@ -68,12 +68,18 @@ Route::get('/testOrm', 'PruebasController@testOrm');
 
         //Rutas del controlador entradas
         Route::resource('/api/post', 'PostController');
+        
+        Route::get('/api/post-language/{id}/{language}','PostController@postLanguage');
+        Route::get('/api/post-lang/{language}','PostController@postsByLanguage');
         Route::put('/api/post/update/{post_language_id}/{post_id}','PostController@updateLanguage');
         Route::post('/api/post/upload','PostController@upload');
         
+        
         Route::get('/api/post/category/{id}/{language}', 'PostController@getPostsByCategory');
         Route::get('/api/post/user/{id}', 'PostController@getPostsByUser');
-        Route::get('/api/list-post-admin', 'PostController@getPostsInAdmin');
+        
+        Route::get('/api/list-post-admin/{language}', 'PostController@getPostsInAdminByLanguage');
+        
         Route::get('/api/post/publish/{id}/{value}', 'PostController@setPublished');
 
         //imageController

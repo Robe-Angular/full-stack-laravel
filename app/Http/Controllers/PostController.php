@@ -14,6 +14,7 @@ class PostController extends Controller {
     public function __construct() {
         $this->middleware('api.auth', ['except' => [
             'index', 
+            'postsByLanguage',
             'show', 
             'getImage',
             'getPostsByUser',
@@ -21,8 +22,8 @@ class PostController extends Controller {
             ]]);
     }
 
-    public function index() {
-        $posts = Posts_Language::where('published',true)->with('post')->get();
+    public function postsByLanguage($language) {
+        $posts = Posts_Language::where('published',true)->where('language_symbol',$language)->with('post')->get();
 
         return response()->json([
                     'code' => 200,
@@ -31,7 +32,7 @@ class PostController extends Controller {
                         ], 200);
     }
 
-    public function show($id,Request $request) {
+    public function postLanguage($id,Request $request, $language) {
         $post = Post::find($id);
         $user = $this->getIdentity($request);
         $is_admin = false;
@@ -39,9 +40,32 @@ class PostController extends Controller {
             $is_admin = $user->sub == 1;
         }
         
-        
-        if (is_object($post) && ($is_admin)) {
-            $post_with_category = $post->load('category');
+        if(is_object($post)){
+            $post_with_category = null;
+            if($is_admin){
+                $post_with_category = $post->with('category')->with(
+                    array('posts_language' => function($query) use ($language){ 
+                        $query->where('posts_language.language_symbol', $language);
+                    }))
+                ->with(
+                    array('category.categories_language' => function ($query) use ($language){
+                        $query->where('categories_language.language_symbol',$language);
+                    }))
+                ->get();
+            }else{
+                $post_with_category = $post->with('category')->with(
+                    array('posts_language' => function($query) use ($language){ 
+                        $query->where('posts_language.language_symbol', $language);
+                        $query->where('posts_language.published', true);
+                    }))
+                    ->with(
+                    array('category.categories_language' => function ($query) use ($language){
+                        $query->where('categories_language.language_symbol',$language);
+                    }))
+                ->get();
+            }
+            
+            
             $image_id = $post->image;
             if($image_id){
                 $image_description = Image::find($image_id)->description;
@@ -51,7 +75,8 @@ class PostController extends Controller {
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'post' => $post,
+                'post' => $post_with_category,
+                
                 'image_description' => $image_description,
                 'image_id' => $image_id
             ];
@@ -304,9 +329,10 @@ class PostController extends Controller {
         $posts = Post::where('category_id', $id)->with(
             array('posts_language' => function($query) use ($language){ 
                 $query->where('posts_language.language_symbol', $language);
+                $query->where('posts_language.published', true);
             }))
         
-            ->get();
+        ->get();
         //$posts = Post::all()->load('image');
         /*$posts = Post::with(['image' => function ($query) use ($id) {
             $query->where('category_id','=',$id);
@@ -334,7 +360,7 @@ class PostController extends Controller {
         ], 200);
     }
     
-    public function getPostsInAdmin(Request $request) {
+    public function getPostsInAdminByLanguage(Request $request,$language) {
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
         $data = [
@@ -343,7 +369,10 @@ class PostController extends Controller {
             'message' => 'server error'
         ];
         if($is_admin){
-            $posts = Post::all()->load('image')->load('posts_language');
+            $posts = Post::all()->load(
+                array('posts_language' => function($query) use ($language){ 
+                    $query->where('posts_language.language_symbol', $language);
+                }));
             $data = [
                 'code' => 200,
                 'status' => 'success',
