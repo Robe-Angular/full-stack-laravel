@@ -23,7 +23,12 @@ class PostController extends Controller {
     }
 
     public function postsByLanguage($language) {
-        $posts = Posts_Language::where('published',true)->where('language_symbol',$language)->with('post')->get();
+        
+        $posts = Post::all()->load(
+                array('posts_language' => function($query) use ($language){ 
+                    $query->where('posts_language.language_symbol', $language);
+                    $query->where('posts_language.published', true);
+                }));
 
         return response()->json([
                     'code' => 200,
@@ -43,7 +48,7 @@ class PostController extends Controller {
         if(is_object($post)){
             $post_with_category = null;
             if($is_admin){
-                $post_with_category = $post->with('category')->with(
+                $post_with_category = $post->with(
                     array('posts_language' => function($query) use ($language){ 
                         $query->where('posts_language.language_symbol', $language);
                     }))
@@ -53,7 +58,7 @@ class PostController extends Controller {
                     }))
                 ->get();
             }else{
-                $post_with_category = $post->with('category')->with(
+                $post_with_category = $post->with(
                     array('posts_language' => function($query) use ($language){ 
                         $query->where('posts_language.language_symbol', $language);
                         $query->where('posts_language.published', true);
@@ -75,8 +80,7 @@ class PostController extends Controller {
             $data = [
                 'code' => 200,
                 'status' => 'success',
-                'post' => $post_with_category,
-                
+                'post' => $post_with_category,               
                 'image_description' => $image_description,
                 'image_id' => $image_id
             ];
@@ -167,8 +171,8 @@ class PostController extends Controller {
         if (!empty($params_array) && $is_admin) {
             //Validar los datos
             $validate = \Validator::make($params_array, [
-                        'title' => 'required',
-                        'content' => 'required',
+                        'title_language' => 'required',
+                        'content_language' => 'required',
                         'category_id' => 'required'
             ]);
             if ($validate->fails()) {
@@ -183,8 +187,8 @@ class PostController extends Controller {
             unset($params_array['category']);
             
             $post_language_update_array = array(
-                'title_language' => $params_array['title'],
-                'content_language' => $params_array['content']
+                'title_language' => $params_array['title_language'],
+                'content_language' => $params_array['content_language']
             );
             
             $post_category_update_array = array(
@@ -195,19 +199,21 @@ class PostController extends Controller {
             $post_update = Post::find($post_id)->update($post_category_update_array);
             $post_language_update = Posts_Language::find($post_language_id)->update($post_language_update_array);
 
-            if($post_update && !empty($post)){
-            $data = [
-                'code' => 200,
-                'status' => 'success',
-                'post' => $post_update,
-                'post_language' => $post_language_update
-            ];
+            if($post_update && !empty($post_update) && $post_language_update && !empty($post_language_update) ){
+                $data = [
+                    'code' => 200,
+                    'status' => 'success',
+                    'post' => $post_update,
+                    'post_language' => $post_language_update
+                ];
             }else{
-            $data = [
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'El Post que intentas actualizar no existe'
-            ];    
+                $data = [
+                    'code' => 404,
+                    'status' => 'error',
+                    'message' => 'El Post que intentas actualizar no existe',
+                    'post' => $post_id,
+                    'postLanguage' => $post_language_id 
+                ];    
             }
         }
         //Devolver algo
@@ -396,15 +402,15 @@ class PostController extends Controller {
         ];
         if($is_admin){
             $set_value = $value == 'true' ? true : false;
-            $post = Post::find($id);
-            $post_update = $post->update(['published'=>$set_value]);
+            $post_language = Posts_Language::find($id);
+            $post_update = $post_language->update(['published'=>$set_value]);
             $data = [
                 'code'=>200,
                 'status' => 'success',
                 'post_update' => $post_update,
                 'value' => $value,
                 'set_value' => $set_value,
-                'post' => $post
+                'post_language' => $post_language
             ];
         }
         
