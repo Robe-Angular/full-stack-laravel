@@ -87,6 +87,8 @@ Route::get('/testOrm', 'PruebasController@testOrm');
         Route::get('/api/post/image/{file_description}', 'ImageController@getImage');
         Route::post('/api/image/save', 'ImageController@saveImage');
         Route::get('api/images-by-post/{post_id}','ImageController@getImagesByPost');
+        Route::put('api/save-image-language/{image_id}','ImagesLanguageController@submitImageLanguage');
+        Route::get('/api/post/image-language/{description_language}', 'ImageController@getImageFromDescriptionLanguage');
         
         
         

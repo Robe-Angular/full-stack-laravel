@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Image;
+use App\Images_Language;
 use Illuminate\Http\Request;
 use App\Helpers\JwtAuth;
 use Illuminate\Http\Response;
@@ -13,7 +14,8 @@ class ImageController extends Controller
 {
     public function __construct() {
         $this->middleware('api.auth', ['except' => [
-            'getImage'
+            'getImage',
+            'getImageFromDescriptionLanguage'
             
             ]]);
     }
@@ -195,9 +197,20 @@ class ImageController extends Controller
         
     }
     
+    public function getImageFromDescriptionLanguage($description_language){
+        $images_language = Images_Language::where('description_language',$description_language)->
+            with('image')->get();
+        
+        $file_description = $images_language[0]->image->description;
+        
+        return $this->getImage($file_description);
+    }
+    
     public function getImage($file_description){
         
+        
         $images = Image::where('description',$file_description)->get();
+        
         if(count($images) > 1){
             $data = [
                 'code'  => 404,
