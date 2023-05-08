@@ -46,4 +46,42 @@ class ImagesLanguageController extends Controller
         }
         return response()->json($data, $data['code']);
     }
+    
+    public function imagesLanguageOnImage(Request $request,$image_id,$language){
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'admin not logged'
+        ];
+        if($is_admin){
+            $images_language = Images_Language::where('image_id',$image_id)
+                ->where('language_symbol',$language)
+            ->get();
+            $data = [
+                'code' => 200,
+                'images_language'=>$images_language
+            ];
+        }
+        return response()->json($data, $data['code']);
+    }
+    
+    public function deleteImageLanguage(Request $request,$image_language_id){
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'admin not logged'
+        ];
+        if($is_admin){
+            $image_language_deleted = Images_Language::find($image_language_id)->delete();
+            $data = [
+                'code' => 200,
+                'image_language_deleted'=>$image_language_deleted
+            ];
+        }
+        return response()->json($data, $data['code']);
+    }
 }

@@ -69,8 +69,10 @@ Route::get('/testOrm', 'PruebasController@testOrm');
         //Rutas del controlador entradas
         Route::resource('/api/post', 'PostController');
         
-        Route::get('/api/post-language/{id}/{language}','PostController@postLanguage');
+        Route::get('/api/post-language/{id}','PostController@postLanguage');
         Route::get('/api/post-lang/{language}','PostController@postsByLanguage');
+        Route::get('/api/posts-language-on-post/{post_id}','PostController@postsLanguageOnPost');
+        Route::get('/api/posts-language-on-post-admin/{post_id}','PostController@postsLanguageOnPostAdmin');
         Route::put('/api/post/update/{post_language_id}/{post_id}','PostController@updateLanguage');
         Route::post('/api/post/upload','PostController@upload');
         
@@ -89,6 +91,8 @@ Route::get('/testOrm', 'PruebasController@testOrm');
         Route::get('api/images-by-post/{post_id}','ImageController@getImagesByPost');
         Route::put('api/save-image-language/{image_id}','ImagesLanguageController@submitImageLanguage');
         Route::get('/api/post/image-language/{description_language}', 'ImageController@getImageFromDescriptionLanguage');
+        Route::get('/api/images-language-on-image/{image_id}/{language}', 'ImagesLanguageController@imagesLanguageOnImage');
+        Route::delete('/api/delete-image-language/{image_language_id}', 'ImagesLanguageController@deleteImageLanguage');
         
         
         

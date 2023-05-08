@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Helpers\JwtAuth;
 
+
 class PostController extends Controller {
 
     public function __construct() {
@@ -18,79 +19,78 @@ class PostController extends Controller {
             'show', 
             'getImage',
             'getPostsByUser',
-            'getPostsByCategory'
+            'getPostsByCategory',
+            'postsLanguageOnPost'
             ]]);
     }
 
     public function postsByLanguage($language) {
         
-        $posts = Post::all()->load(
+        $posts = Posts_Language::where('language_symbol',$language)
+            ->where('published',true)
+            ->with(['post' => function ($query) use ($language){
+                $query->with(['category' => function ($query) use ($language){
+                        $query->with(['categories_language' => function($query) use ($language){
+                            $query->where('language_symbol', $language);
+                        }]);
+                },'image.images_language' => function($query) use ($language){
+                    $query->where('language_symbol',$language)->first();
+                }]);
+            }])->
+        get();
+                /*Post::all()->load(
                 array('posts_language' => function($query) use ($language){ 
                     $query->where('posts_language.language_symbol', $language);
                     $query->where('posts_language.published', true);
-                }));
+                }));*/
 
         return response()->json([
                     'code' => 200,
                     'status' => 'success',
+                    'symbol' => $language,
                     'posts' => $posts
                         ], 200);
     }
 
-    public function postLanguage($id,Request $request, $language) {
-        $post = Post::find($id);
+    public function postLanguage($id,Request $request) {
         $user = $this->getIdentity($request);
         $is_admin = false;
         if(is_object($user)){
             $is_admin = $user->sub == 1;
         }
-        
-        if(is_object($post)){
-            $post_with_category = null;
-            if($is_admin){
-                $post_with_category = $post->with(
-                    array('posts_language' => function($query) use ($language){ 
-                        $query->where('posts_language.language_symbol', $language);
-                    }))
-                ->with(
-                    array('category.categories_language' => function ($query) use ($language){
-                        $query->where('categories_language.language_symbol',$language);
-                    }))
-                ->get();
-            }else{
-                $post_with_category = $post->with(
-                    array('posts_language' => function($query) use ($language){ 
-                        $query->where('posts_language.language_symbol', $language);
-                        $query->where('posts_language.published', true);
-                    }))
-                    ->with(
-                    array('category.categories_language' => function ($query) use ($language){
-                        $query->where('categories_language.language_symbol',$language);
-                    }))
-                ->get();
-            }
-            
-            
-            $image_id = $post->image;
-            if($image_id){
-                $image_description = Image::find($image_id)->description;
-            }else{
-                $image_description = 'no_main_yet';
-            }
-            $data = [
-                'code' => 200,
-                'status' => 'success',
-                'post' => $post_with_category,               
-                'image_description' => $image_description,
-                'image_id' => $image_id
-            ];
-        } else {
-            $data = [
-                'code' => 404,
-                'status' => 'error',
-                'posts' => 'La entrada no existe'
-            ];
+        $language = Posts_Language::find($id)->language_symbol;
+
+        if($is_admin){
+            $post_language = Posts_Language::where('id',$id)
+                    ->with([
+                        'post',
+                        'post.category',
+                        'post.image',
+                        'post.category.categories_language' => function($query) use($language){
+                            $query->where('language_symbol',$language);
+                        }])
+            ->first();
+        }else{
+            $post_language = Posts_Language::where('id',$id)->where('published',true)
+                    ->with([
+                        'post',
+                        'post.category',
+                        'post.image',
+                        'post.category.categories_language' => function($query) use($language){
+                            $query->where('language_symbol',$language);
+                        }])
+            ->first();
         }
+
+
+
+        $data = [
+            'code' => 200,
+            'status' => 'success',
+            'post' => $post_language
+                        
+        ];
+        
 
         return response()->json($data, $data['code']);
     }
@@ -332,6 +332,19 @@ class PostController extends Controller {
     
     public function getPostsByCategory($id,$language) {
         
+        $posts = Posts_Language::where('language_symbol',$language)
+            ->where('published',true)
+            ->whereHas('post', function ($query) use ($id){
+               $query->where('category_id',$id);
+            })
+            ->with(['post' => function ($query) use ($language){
+                $query->with(['image.images_language' => function($query) use ($language){
+                    $query->where('language_symbol',$language)->first();
+                }]);
+            }])->
+        get();
+        
+                /*
         $posts = Post::where('category_id', $id)->with(
             array('posts_language' => function($query) use ($language){ 
                 $query->where('posts_language.language_symbol', $language);
@@ -339,6 +352,8 @@ class PostController extends Controller {
             }))
         
         ->get();
+                 * 
+                 */
         //$posts = Post::all()->load('image');
         /*$posts = Post::with(['image' => function ($query) use ($id) {
             $query->where('category_id','=',$id);
@@ -369,16 +384,24 @@ class PostController extends Controller {
     public function getPostsInAdminByLanguage(Request $request,$language) {
         $user = $this->getIdentity($request);
         $is_admin = $user->sub == 1;
+        
         $data = [
             'code'=>400,
             'status' => 'error',
             'message' => 'server error'
         ];
         if($is_admin){
-            $posts = Post::all()->load(
-                array('posts_language' => function($query) use ($language){ 
-                    $query->where('posts_language.language_symbol', $language);
-                }));
+            $posts = Posts_Language::where('language_symbol',$language)
+                ->with(['post' => function ($query) use ($language){
+                    $query->with(['category' => function ($query) use ($language){
+                            $query->with(['categories_language' => function($query) use ($language){
+                                $query->where('language_symbol', $language);
+                            }]);
+                    },'image.images_language' => function($query) use ($language){
+                        $query->where('language_symbol',$language)->first();
+                    }]);
+                }])->
+            get();
             $data = [
                 'code' => 200,
                 'status' => 'success',
@@ -416,5 +439,34 @@ class PostController extends Controller {
         
         return response()->json($data,$data['code']);
             
+    }
+    
+    public function postsLanguageOnPost($post_id){
+        $posts_language = Posts_Language::where('published',true)
+            ->where('post_id',$post_id)
+        ->get();
+        return response()->json([
+            'posts_language' => $posts_language
+        ],200);
+    }
+    
+    public function postsLanguageOnPostAdmin(Request $request,$post_id){
+        $user = $this->getIdentity($request);
+        $is_admin = $user->sub == 1;
+        $data = [
+            'code'=>400,
+            'status' => 'error',
+            'message' => 'server error'
+        ];
+        if($is_admin){
+            $posts_language = Posts_Language::where('post_id',$post_id)->get();
+            $data = [   
+                'code' => 200,
+                'posts_language' => $posts_language
+            ];
+        }
+        
+        
+        return response()->json($data,$data['code']);
     }
 }
