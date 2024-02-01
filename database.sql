@@ -55,8 +55,6 @@ CONSTRAINT pk_categories PRIMARY KEY(id)
 CREATE TABLE posts(
 id              int(255) auto_increment not null,
 category_id     int(255)not null,
-title           varchar(255) not null,
-content         text not null,
 image           varchar(255),
 created_at      datetime DEFAULT NULL,
 updated_at      datetime DEFAULT NULL,
