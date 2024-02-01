@@ -20,7 +20,8 @@ class PostController extends Controller {
             'getImage',
             'getPostsByUser',
             'getPostsByCategory',
-            'postsLanguageOnPost'
+            'postsLanguageOnPost',
+            'postLanguage'
             ]]);
     }
 
