@@ -1,5 +1,5 @@
 <p>.gitignore -> /storage/app/images/users</p>
-
+<p>Run database.sql and migrate the app with php artisan migrate to set de correct DB</p>
 <p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
 
 <p align="center">
