@@ -6,8 +6,8 @@
 <p>-Clone one-admin branch<p>
 <p>Comments are made in angular using "Meta for developers" facebook</p>
 <p>Run database.sql and migrate the app with php artisan migrate to set de correct DB</p>
-<p>The front end is: <a>https://github.com/Robe-Angular/fullStack-blog-angular/tree/one-admin</a></p>
-<p>Example usage is: ng-morning-nr4.me</p>
+<p>The front end is: <a href="https://github.com/Robe-Angular/fullStack-blog-angular/tree/one-admin">https://github.com/Robe-Angular/fullStack-blog-angular/tree/one-admin</a></p>
+<p>Example usage is: <a href="ng-morning-nr4.me">ng-morning-nr4.me</a></p>
 
 
 <p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
