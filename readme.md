@@ -1,4 +1,14 @@
+
 <p>.gitignore -> /storage/app/images/users</p>
+<p>Very important!</p>
+<p>For set current admin:</p>
+<p>-Check .env to set admin email and set pwd using 3rd party bycrpt</p>
+<p>-Clone one-admin branch<p>
+<p>Comments are made in angular using "Meta for developers" facebook</p>
+<p>Run database.sql and migrate the app with php artisan migrate to set de correct DB</p>
+<p>The front end is: <a href="https://github.com/Robe-Angular/fullStack-blog-angular/tree/one-admin">https://github.com/Robe-Angular/fullStack-blog-angular/tree/one-admin</a></p>
+<p>Example usage is: <a href="https://ng-morning-nr4.me">ng-morning-nr4.me</a></p>
+
 
 <p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
 
