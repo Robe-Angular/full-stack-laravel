@@ -391,6 +391,7 @@ class PostController extends Controller {
             'message' => 'server error'
         ];
         if($is_admin){
+            
             $posts = Posts_Language::where('language_symbol',$language)
                 ->with(['post' => function ($query) use ($language){
                     $query->with(['category' => function ($query) use ($language){
